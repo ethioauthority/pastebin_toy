@@ -31,6 +31,6 @@ eg. `$ rvm gemset create pastebin_toy`
 * make script executable
 `$ chmod +x <script_name.rb>`
 * run script with argument
-`$ ./<pastebin.rb> "test text for paste"`
+`$ ./pastebin.rb "test text for paste"`
 
 Further Development [coming soon...]
