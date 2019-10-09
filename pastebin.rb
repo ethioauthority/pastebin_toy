@@ -6,25 +6,25 @@ require 'yaml'
 
 class PasteBin
   BASE_URL = 'https://pastebin.com/api/api_post.php'.freeze
-  DEVKEY = ''.freeze
 
   def start
     # :TODO handle different privacy levels
-    u_key = login_or_read_cached_user_key
+    u_key = login_or_read_stored_user_key
+    d_key = read_stored_dev_key
     # api_user_key = api_login
-    # puts '[pastebin] enter your text'
-    # p_text = gets.chomp
+    puts '[pastebin] enter your text'
+    p_text = gets.chomp
     # puts '[pastebin] enter your paste name'
     # p_name = gets.chomp
     # puts '[pastebin] enter your paste format'
     # p_format = gets.chomp
     # puts '[pastebin] enter your paste expire date'
     # ex_date = gets.chomp
-    p_text = 'some text'
+    # p_text = 'some text'
     p_format = 'ruby'
     p_name = 'first paste'
     ex_date = '10M'
-    paste_params = setup_paste_params(p_text, ex_date, p_format, u_key, p_name)
+    paste_params = setup_paste_params(p_text, ex_date, p_format, u_key, d_key, p_name)
     response = post_request(BASE_URL, paste_params) # max of 150 requests per minute
     if !response.nil? && response.body.include?('https')
       puts "[pastebin] request was successful >>> #{response.body}"
@@ -33,9 +33,17 @@ class PasteBin
     end
   end
 
-  def setup_paste_params(p_text, ex_date, p_format, u_key, p_name)
+  def read_stored_dev_key
+    if local_api_dev_key?
+      YAML.load_file('api_dev_key.yml')
+    else
+      # handle case there is n't any kind of yml file stored in hte colacal dsi-r
+    end
+  end
+
+  def setup_paste_params(p_text, ex_date, p_format, u_key, d_key, p_name)
     request = {}
-    request['api_dev_key'] = DEVKEY
+    request['api_dev_key'] = d_key
     request['api_option'] = 'paste'
     request['api_paste_code'] = p_text
     request['api_paste_private'] = 0
@@ -46,7 +54,7 @@ class PasteBin
     request
   end
 
-  def login_or_read_cached_user_key
+  def login_or_read_stored_user_key
     if local_api_user_key?
       YAML.load_file('api_user_key.yml')
     else
@@ -55,16 +63,21 @@ class PasteBin
       api_user_name = STDIN.noecho(&:gets).chomp
       puts '[pastebin] enter your password'
       api_user_password = STDIN.noecho(&:gets).chomp
-      request_params = setup_login_params(api_user_name, api_user_password)
+      puts '[pastebin] enter your dev key'
+      api_dev_key = STDIN.noecho(&:gets).chomp
+      request_params = setup_login_params(api_user_name, api_user_password, api_dev_key)
       response = post_request(base_url, request_params)
       if !response.nil?
-        save_api_user_key(response.body)
+        save_dev_key(api_dev_key) if save_api_user_key(response.body)
         return response.body
       else
         # some things went wrong
         puts response.body
       end
     end
+
+
+
 
     # Creating An 'api_user_key' Using The API Member Login System
     # https://pastebin.com/api/api_login.php
@@ -85,11 +98,18 @@ class PasteBin
     JSON.parse(response)
   end
 
-  def setup_login_params(user_name, password)
+  def save_dev_key(api_dev_key)
+    file = File.new('api_dev_key.yml', 'w')
+    file.write(api_dev_key.to_yaml)
+    file.close
+    true
+  end
+
+  def setup_login_params(user_name, password, api_dev_key)
     request = {}
     request['api_user_name'] = user_name
     request['api_user_password'] = password
-    request['api_dev_key'] = DEVKEY
+    request['api_dev_key'] = api_dev_key
     request
   end
 
@@ -108,10 +128,19 @@ class PasteBin
     end
   end
 
+  def local_api_dev_key?
+    if File.exist?('api_dev_key.yml')
+      true
+    else
+      false
+    end
+  end
+
   def save_api_user_key(key)
     file = File.new('api_user_key.yml', 'w')
     file.write(key.to_yaml)
     file.close
+    true
   end
 end
 
