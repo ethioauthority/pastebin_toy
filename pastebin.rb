@@ -12,8 +12,10 @@ class PasteBin
     u_key = login_or_read_stored_user_key
     d_key = read_stored_dev_key
     # api_user_key = api_login
-    puts '[pastebin] enter your text'
-    p_text = gets.chomp
+    # ARGV
+    # puts '[pastebin] enter your text'
+    # p_text = gets.chomp
+    p_text = ARGV.first
     # puts '[pastebin] enter your paste name'
     # p_name = gets.chomp
     # puts '[pastebin] enter your paste format'
