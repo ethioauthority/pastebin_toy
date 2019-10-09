@@ -21,7 +21,7 @@ Features to add [coming soon...]
 Setup usage with rvm and process event series:
 * create a gemset
 `$ rvm gemset create <gemset>`
-eg. `$ rvm gemset create get_my_news`
+eg. `$ rvm gemset create pastebin`
 * use created gemset
 `$ rvm <ruby version>@<gemset>`
 * install bundler gem
